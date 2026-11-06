@@ -1,4 +1,4 @@
-
+#include <cstdlib>
 #include "crow.h"
 #include <nlohmann/json.hpp>
 
@@ -224,14 +224,16 @@ int main() {
         return res;
     });
 
-    std::cout << "====================================\n";
-    std::cout << "     TIAONG GPS NAVIGATION SERVER\n";
-    std::cout << "====================================\n";
-    std::cout << "Server: http://localhost:18080\n";
-    std::cout << "Status: Running\n";
-    std::cout << "Press CTRL+C to stop the server.\n";
+    const char* portEnv = std::getenv("PORT");
+int port = portEnv ? std::stoi(portEnv) : 18080;
 
-    app.port(18080).multithreaded().run();
+std::cout << "====================================\n";
+std::cout << "     TIAONG GPS NAVIGATION SERVER\n";
+std::cout << "====================================\n";
+std::cout << "Server port: " << port << "\n";
+std::cout << "Status: Running\n";
+std::cout << "Press CTRL+C to stop the server.\n";
 
+app.bindaddr("0.0.0.0").port(port).multithreaded().run();
     return 0;
 }
