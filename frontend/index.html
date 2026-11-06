@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiaong GPS Navigation</title>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <div class="brand-icon">T</div>
+            <div>
+                <h1>Tiaong GPS</h1>
+                <p>Navigation System</p>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <span class="live-indicator"></span>
+            <span>OpenStreetMap</span>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="sidebar">
+            <div class="welcome">
+                <span class="eyebrow">TIAONG, QUEZON</span>
+                <h2>Where do you<br> want to go?</h2>
+                <p>Find the shortest road route to your destination.</p>
+            </div>
+
+            <div class="route-form">
+                <label for="startLocation">Starting location</label>
+                <div class="field">
+                    <span class="field-dot start-dot"></span>
+                    <input id="startLocation" type="text"
+                           placeholder="e.g. Tiaong Municipal Hall">
+                </div>
+
+                <label for="endLocation">Destination</label>
+                <div class="field">
+                    <span class="field-dot end-dot"></span>
+                    <input id="endLocation" type="text"
+                           placeholder="e.g. Tiaong Public Market">
+                </div>
+
+                <button id="routeButton" class="primary-button">
+                    <span>Find Shortest Route</span>
+                    <span>→</span>
+                </button>
+
+                <button id="locateButton" class="secondary-button">
+                    ◎ Use My Current Location
+                </button>
+            </div>
+
+            <div id="statusPanel" class="status-panel">
+                <div class="status-icon">ⓘ</div>
+                <div>
+                    <strong>Ready to navigate</strong>
+                    <p>Enter your starting point and destination.</p>
+                </div>
+            </div>
+
+            <section id="routeResults" class="route-results hidden">
+                <div class="result-heading">Route information</div>
+
+                <div class="result-grid">
+                    <div class="result-card">
+                        <span>Distance</span>
+                        <strong id="distanceResult">--</strong>
+                    </div>
+                    <div class="result-card">
+                        <span>Est. driving time</span>
+                        <strong id="timeResult">--</strong>
+                    </div>
+                </div>
+
+                <div class="result-detail">
+                    <strong>Route calculated using</strong>
+                    <p>C++17 Dijkstra's Shortest Path Algorithm</p>
+                </div>
+
+                <button id="clearButton" class="secondary-button">
+                    Clear Route
+                </button>
+            </section>
+
+            <div class="sidebar-footer">
+                <span>Powered by OpenStreetMap</span>
+                <span>DSA Project • C++17</span>
+            </div>
+        </aside>
+
+        <section class="map-section">
+            <div class="map-heading">
+                <div>
+                    <h2>Map of Tiaong</h2>
+                    <p>Tiaong, Quezon, Philippines</p>
+                </div>
+                <div class="map-badge">
+                    <span class="live-indicator"></span>
+                    Live map
+                </div>
+            </div>
+
+            <div id="map"></div>
+
+            <div class="map-legend">
+                <span><i class="legend-start"></i> Starting point</span>
+                <span><i class="legend-end"></i> Destination</span>
+                <span><i class="legend-route"></i> Calculated route</span>
+            </div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
