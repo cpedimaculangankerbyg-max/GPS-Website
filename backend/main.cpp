@@ -1,7 +1,5 @@
-#include <cstdlib>
-#include "crow.h"
-#include <nlohmann/json.hpp>
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,9 +9,15 @@
 #include <functional>
 #include <limits>
 #include <algorithm>
+#include <stdexcept>
+
+#include "crow.h"
+#include <nlohmann/json.hpp>
 
 using json = nlohmann::json;
+
 // Global CORS middleware.
+// All CORS headers are added here only once.
 struct CorsMiddleware {
     struct context {};
 
@@ -29,7 +33,12 @@ struct CorsMiddleware {
         context& ctx
     ) {
         res.add_header("Access-Control-Allow-Origin", "*");
-        res.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+        res.add_header(
+            "Access-Control-Allow-Methods",
+            "GET, POST, OPTIONS"
+        );
+
         res.add_header(
             "Access-Control-Allow-Headers",
             "Content-Type, Accept, Authorization"
@@ -37,19 +46,15 @@ struct CorsMiddleware {
     }
 };
 
+// Graph edge structure.
 struct Edge {
     std::string to;
     double weight;
 };
 
-using Graph = std::unordered_map<std::string, std::vector<Edge>>;
+using Graph =
+    std::unordered_map<std::string, std::vector<Edge>>;
 
-// Add CORS headers so the website can communicate with the C++ server.
-void addCorsHeaders(crow::response& res) {
-    res.add_header("Access-Control-Allow-Origin", "*");
-    res.add_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.add_header("Access-Control-Allow-Headers", "Content-Type");
-}
 
 // Dijkstra's shortest-path algorithm.
 json findShortestPath(
@@ -58,6 +63,7 @@ json findShortestPath(
     const std::string& destination
 ) {
     Graph graph;
+
     std::unordered_set<std::string> nodes;
 
     // Read graph nodes.
@@ -67,12 +73,19 @@ json findShortestPath(
 
     // Read graph edges.
     for (const auto& edge : graphData.at("edges")) {
-        std::string from = edge.at("from").get<std::string>();
-        std::string to = edge.at("to").get<std::string>();
-        double weight = edge.at("weight").get<double>();
+        std::string from =
+            edge.at("from").get<std::string>();
+
+        std::string to =
+            edge.at("to").get<std::string>();
+
+        double weight =
+            edge.at("weight").get<double>();
 
         if (weight < 0) {
-            throw std::runtime_error("Negative edge weights are not supported.");
+            throw std::runtime_error(
+                "Negative edge weights are not supported."
+            );
         }
 
         graph[from].push_back({to, weight});
@@ -86,9 +99,11 @@ json findShortestPath(
     }
 
     // Initialize distances.
-    const double INF = std::numeric_limits<double>::infinity();
+    const double INF =
+        std::numeric_limits<double>::infinity();
 
     std::unordered_map<std::string, double> distance;
+
     std::unordered_map<std::string, std::string> previous;
 
     for (const auto& node : nodes) {
@@ -97,7 +112,8 @@ json findShortestPath(
 
     distance[start] = 0.0;
 
-    using QueueItem = std::pair<double, std::string>;
+    using QueueItem =
+        std::pair<double, std::string>;
 
     std::priority_queue<
         QueueItem,
@@ -110,6 +126,7 @@ json findShortestPath(
     // Dijkstra algorithm.
     while (!pq.empty()) {
         auto [currentDistance, currentNode] = pq.top();
+
         pq.pop();
 
         if (currentDistance > distance[currentNode]) {
@@ -121,10 +138,12 @@ json findShortestPath(
         }
 
         for (const auto& edge : graph[currentNode]) {
-            double newDistance = currentDistance + edge.weight;
+            double newDistance =
+                currentDistance + edge.weight;
 
             if (newDistance < distance[edge.to]) {
                 distance[edge.to] = newDistance;
+
                 previous[edge.to] = currentNode;
 
                 pq.push({newDistance, edge.to});
@@ -134,7 +153,9 @@ json findShortestPath(
 
     // Check whether a route exists.
     if (distance[destination] == INF) {
-        throw std::runtime_error("No route found between these locations.");
+        throw std::runtime_error(
+            "No route found between these locations."
+        );
     }
 
     // Reconstruct shortest path.
@@ -146,13 +167,16 @@ json findShortestPath(
         path.push_back(current);
 
         if (!previous.count(current)) {
-            throw std::runtime_error("Unable to reconstruct the route.");
+            throw std::runtime_error(
+                "Unable to reconstruct the route."
+            );
         }
 
         current = previous[current];
     }
 
     path.push_back(start);
+
     std::reverse(path.begin(), path.end());
 
     return {
@@ -162,37 +186,51 @@ json findShortestPath(
     };
 }
 
+
+// Main server.
 int main() {
+
     crow::App<CorsMiddleware> app;
 
-    // Health check.
+    // Health check endpoint.
     CROW_ROUTE(app, "/api/health")
     ([]() {
-        crow::response res(200, "Tiaong GPS C++ server is running!");
-        addCorsHeaders(res);
-        res.set_header("Content-Type", "text/plain");
+        crow::response res(
+            200,
+            "Tiaong GPS C++ server is running!"
+        );
+
+        res.set_header(
+            "Content-Type",
+            "text/plain"
+        );
+
         return res;
     });
+
 
     // Handle browser preflight requests.
     CROW_ROUTE(app, "/api/route")
     .methods("OPTIONS"_method)
     ([]() {
         crow::response res(204);
-        addCorsHeaders(res);
         return res;
     });
+
 
     // Calculate the shortest route.
     CROW_ROUTE(app, "/api/route")
     .methods("POST"_method)
     ([](const crow::request& req) {
+
         crow::response res;
 
         try {
-            json requestData = json::parse(req.body);
+            json requestData =
+                json::parse(req.body);
 
-            json graphData = requestData.at("graph");
+            json graphData =
+                requestData.at("graph");
 
             std::string start =
                 requestData.at("start").get<std::string>();
@@ -210,6 +248,7 @@ int main() {
             res.body = result.dump();
         }
         catch (const std::exception& e) {
+
             res.code = 400;
 
             res.body = json{
@@ -218,22 +257,46 @@ int main() {
             }.dump();
         }
 
-        addCorsHeaders(res);
-        res.set_header("Content-Type", "application/json");
+        res.set_header(
+            "Content-Type",
+            "application/json"
+        );
 
         return res;
     });
 
+
+    // Read Render port or use local port 18080.
     const char* portEnv = std::getenv("PORT");
-int port = portEnv ? std::stoi(portEnv) : 18080;
 
-std::cout << "====================================\n";
-std::cout << "     TIAONG GPS NAVIGATION SERVER\n";
-std::cout << "====================================\n";
-std::cout << "Server port: " << port << "\n";
-std::cout << "Status: Running\n";
-std::cout << "Press CTRL+C to stop the server.\n";
+    int port = portEnv
+        ? std::stoi(portEnv)
+        : 18080;
 
-app.bindaddr("0.0.0.0").port(port).multithreaded().run();
+
+    std::cout
+        << "====================================\n";
+
+    std::cout
+        << "     TIAONG GPS NAVIGATION SERVER\n";
+
+    std::cout
+        << "====================================\n";
+
+    std::cout
+        << "Server port: " << port << "\n";
+
+    std::cout
+        << "Status: Running\n";
+
+    std::cout
+        << "Press CTRL+C to stop the server.\n";
+
+
+    app.bindaddr("0.0.0.0")
+       .port(port)
+       .multithreaded()
+       .run();
+
     return 0;
 }

@@ -19,3 +19,12 @@ target_link_libraries(tiaong_gps_server
     Crow::Crow
     nlohmann_json::nlohmann_json
 )
+
+# Windows networking libraries
+if(WIN32)
+    target_link_libraries(tiaong_gps_server
+        PRIVATE
+        ws2_32
+        mswsock
+    )
+endif()
