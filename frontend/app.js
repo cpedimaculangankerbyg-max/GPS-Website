@@ -4,7 +4,7 @@
 // Road data: OpenStreetMap Overpass API
 // Routing: C++17 Dijkstra backend
 
-const API_URL = "http://localhost:18080";
+const API_URL = "https://gps-website-7jwa.onrender.com";
 const TIAONG_CENTER = [13.95, 121.32];
 
 // Approximate bounding box covering Tiaong.
